@@ -5,7 +5,7 @@ import React, {
   useState,
 } from 'react';
 import type * as duckdb from '@duckdb/duckdb-wasm';
-import { initDB } from '../db/duckdb';
+import { initDB } from '../domain/duckdb';
 
 interface DbContextValue {
   db: duckdb.AsyncDuckDB | null;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Item, KVSData } from '../domain/index';
 import { useDbContext } from './useDb';
-import { persistDB } from '../db/duckdb';
+import { persistDB } from '../domain/duckdb';
 
 /**
  * Hook to read and write items for a given partition key.

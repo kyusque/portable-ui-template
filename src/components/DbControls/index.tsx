@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useDbContext } from '../../hooks/useDb';
-import { exportDB, importDB, clearCache } from '../../db/duckdb';
+import { exportDB, importDB, clearCache } from '../../domain/duckdb';
 
 export function DbControls() {
   const { db, ready } = useDbContext();
