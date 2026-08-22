@@ -1,26 +1,35 @@
 import * as duckdb from '@duckdb/duckdb-wasm';
+import duckdbMvpModule from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
+import duckdbEhModule from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
+import duckdbMvpWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
+import duckdbEhWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
 
 const CACHE_KEY = 'duckdb-cache';
+const BUNDLES: duckdb.DuckDBBundles = {
+  mvp: {
+    mainModule: duckdbMvpModule,
+    mainWorker: duckdbMvpWorker,
+  },
+  eh: {
+    mainModule: duckdbEhModule,
+    mainWorker: duckdbEhWorker,
+  },
+};
 
 let _db: duckdb.AsyncDuckDB | null = null;
 
 export async function initDB(): Promise<duckdb.AsyncDuckDB> {
   if (_db) return _db;
 
-  const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
-  const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+  const bundle = await duckdb.selectBundle(BUNDLES);
+  if (!bundle.mainWorker) {
+    throw new Error('DuckDB worker bundle is unavailable');
+  }
 
-  const worker_url = URL.createObjectURL(
-    new Blob([`importScripts("${bundle.mainWorker!}");`], {
-      type: 'text/javascript',
-    })
-  );
-
-  const worker = new Worker(worker_url);
+  const worker = new Worker(bundle.mainWorker);
   const logger = new duckdb.ConsoleLogger();
   const db = new duckdb.AsyncDuckDB(logger, worker);
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-  URL.revokeObjectURL(worker_url);
 
   // Restore from cache if available
   const cached = loadCache();

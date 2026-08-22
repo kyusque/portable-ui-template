@@ -1,58 +1,51 @@
-# Distribution Formats
+# portable-ui-distribution
 
-## 1. GitHub Pages (`docs/`)
+## このスキルの目的
 
-Built with `pnpm build:pages`. Outputs a static site to `docs/` for hosting on GitHub Pages.
+同じ UI とデータモデルを、利用者ごとの受け取り方に合わせて複数の出力先へ配布する。
+判断基準は「利用環境に合わせて最小の依存だけを渡せるか」であり、出力先を増やすこと自体が目的ではない。
 
-Configure in repository Settings → Pages → Source: `docs/` branch.
+## なぜ複数配置にするのか
 
-**Vite config key**: `build.outDir = 'docs'`
+### `docs/`
 
-## 2. Static Site (`static_site/`)
+GitHub Pages ですぐ確認できる実行環境を持つため。
+レビュー、検証、デモでは「まずブラウザで触れること」が価値になる。
 
-Built with `pnpm build:static`. A self-contained static web app suitable for:
-- Local file serving
-- Embedding in other environments
-- Distribution as a ZIP
+### `static_site/`
 
-**Vite config key**: `build.outDir = 'static_site'`
+リポジトリ外へ成果物だけを持ち出したいケースに備えるため。
+ZIP 配布や別サーバー配置など、GitHub Pages 前提ではない配布先に向く。
 
-## 3. Component Library (`dist/`)
+### `dist/`
 
-Built with `pnpm build:lib`. Exports individual React components as ES modules.
+テンプレートを部品として再利用するため。
+アプリ全体ではなくコンポーネント単位で組み込みたい利用者には、静的サイトよりライブラリ出力が適している。
 
-Structure:
-```
-dist/
-  components/
-    SampleComponent/
-      index.js        # ES module
-      index.d.ts      # TypeScript types
-      binding.js      # Framework-agnostic binding
-```
+### `streamlit_sample/`
 
-Consumers can import:
-```javascript
-import { SampleComponent } from 'portable-ui-template/dist/components/SampleComponent';
-```
+Python 側の統合イメージを早く評価するため。
+フロントエンド単独ではなく、他ランタイムとの接続点も最初から確認対象に含める。
 
-## 4. Streamlit Integration (`streamlit_<package_name>/`)
+## 判断基準
 
-A Python package wrapping the component as a Streamlit custom component.
+1. **利用者が受け取る単位が明確か**
+   - デモを見る人には `docs/`
+   - 配布物をそのまま置きたい人には `static_site/`
+   - 組み込みたい人には `dist/`
+2. **出力先ごとの差分が実装都合ではなく利用都合か**
+   - 同じ UI を別の目的で包み直しているだけであること
+   - 出力先ごとに別実装を増やさないこと
+3. **検証方法が出力先ごとに定義されているか**
+   - `docs/`: ブラウザで動作確認できる
+   - `dist/`: ライブラリとして参照できる
+   - `streamlit_sample/`: 統合サンプルとして読める
 
-Each component directory contains:
-- `__init__.py` — Python API
-- `frontend/` — symlink or copy of built component assets
+## 実装上の整理
 
-Usage:
-```python
-from streamlit_sample import sample_component
-value = sample_component(data={"key": "value"})
-```
+- `pnpm build` → デフォルトの `dist/`
+- `pnpm build:pages` → `docs/`
+- `pnpm build:static` → `static_site/`
 
-## Samples
-
-Each distribution format includes a `sample/` demonstrating:
-- How to pass data in
-- How to receive events/output
-- How to handle the DuckDB export/import flow
+Vite の `build.outDir` を切り替えて、同じアプリ本体から出力先だけを変える。
+この構成により、配布戦略の差分をビルド設定へ閉じ込められる。

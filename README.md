@@ -20,15 +20,14 @@ pnpm dev
 ## ディレクトリ構成
 
 ```
-.github/skills/          # 設計方針・スキルドキュメント (portable-ui-xxx.md)
-docs/                    # GitHub Pages 出力先
-static_site/             # 静的サイト出力先
-dist/components/         # コンポーネントライブラリ + バインディング
+.github/skills/          # 設計・評価基準をまとめたスキル (portable-ui-xxx.md)
+docs/                    # GitHub Pages 用の静的出力
+static_site/             # GitHub Pages 以外へ持ち出す静的出力
+dist/components/         # 再利用用のコンポーネントライブラリ + バインディング
 streamlit_sample/        # Streamlit 連携サンプル
 src/
   components/            # React コンポーネント
-  domain/                # データ型定義（単一テーブル / CAS）
-  db/                    # DuckDB-WASM 初期化・クエリヘルパー
+  domain/                # データモデル / DuckDB-WASM 初期化 / クエリ
   hooks/                 # DB コンテキスト・カスタムフック
 ```
 
@@ -42,10 +41,12 @@ src/
 
 ## スキル一覧 (.github/skills/)
 
+単なるテーマ一覧ではなく、「どう判断して、なぜその構成にするか」を残すためのスキル群。
+
 | ファイル | 内容 |
 |---------|------|
 | `portable-ui-architecture.md` | 全体アーキテクチャ・配布形式 |
 | `portable-ui-data-model.md` | データモデル詳細 |
-| `portable-ui-duckdb.md` | DuckDB-WASM 活用パターン |
-| `portable-ui-distribution.md` | 各配布形式の詳細 |
+| `portable-ui-duckdb.md` | DuckDB-WASM の配置方針・検証基準 |
+| `portable-ui-distribution.md` | 複数配布形式を採る理由と判断基準 |
 | `portable-ui-components.md` | コンポーネント設計ガイドライン |
