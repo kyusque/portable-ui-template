@@ -1,51 +1,52 @@
-# ブラウザキャッシュ設計
+# portable-ui-cache
 
-## 概要
+## Purpose
 
-このテンプレートでは UI の状態・データをブラウザ内にキャッシュする仕組みを持つ。
-バックエンドは不要で、データはすべてクライアント側で完結する。
+This template caches UI state and data in the browser.
+No backend is required — all data lives entirely on the client side.
 
-現在の実装は **DuckDB-WASM** を採用しているが、設計の関心はあくまで
-「ブラウザキャッシュとしての使い勝手」であり、将来的に別の実装（IndexedDB 直接・
-OPFS・SQLite-WASM 等）に置き換えても同じインターフェースを維持できるようにしておく。
+The current implementation uses **DuckDB-WASM**, but the design concern is
+"usability as a browser cache."  The interface is kept stable so that a future
+swap to a different storage backend (direct IndexedDB, OPFS, SQLite-WASM, etc.)
+does not require changes to the rest of the codebase.
 
-実装コードは `src/domain/duckdb.ts` を参照。
+See `src/domain/duckdb.ts` for the implementation.
 
-## キャッシュの役割
+## Role of the Cache
 
-- `items` / `assets` テーブルのデータをブラウザセッション間で保持する
-- キャッシュがなくても動作する（Optional）— 初回は空の状態から始まる
-- キャッシュがあれば前回の状態を復元する
+- Persist `items` / `assets` table data across browser sessions.
+- The app works without a cache (optional) — it starts from an empty state on first load.
+- When a cache exists, the previous state is restored automatically.
 
-## 永続化
+## Persistence
 
-シリアライズした状態（JSON）を `localStorage` に保存する。
-大きなデータには `IndexedDB` への切り替えを検討する。
+Serialized state (JSON) is saved to `localStorage`.
+For large datasets, consider switching to `IndexedDB`.
 
-- ミューテーション後に自動保存
-- キャッシュキー: `duckdb-cache`
+- Auto-save after every mutation.
+- Cache key: `duckdb-cache`
 
-## エクスポート / インポート
+## Export / Import
 
-キャッシュはファイルとしてダウンロード・アップロードできる。
+The cache can be downloaded and uploaded as a file.
 
 ```typescript
 import { exportDB, importDB } from '@/domain/duckdb';
 
-// エクスポート → ファイル保存
+// Export → save to file
 const buffer = await exportDB(db);
 
-// インポート ← ファイル読み込み
+// Import ← load from file
 await importDB(db, buffer);
 ```
 
-これにより別の端末・環境へのデータ移行、スナップショット共有が可能。
+This enables data migration between devices and snapshot sharing.
 
-## アセット（バイナリデータ）
+## Assets (Binary Data)
 
-生のバイナリデータ（画像・PDF 等）は `assets` テーブルに格納する。
+Raw binary data (images, PDFs, etc.) is stored in the `assets` table.
 
-### 挿入（ファイルアップロード）
+### Insert (file upload)
 
 ```typescript
 import { storeAsset } from '@/domain/assets';
@@ -58,25 +59,26 @@ async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
 }
 ```
 
-### 表示（Blob API — CORS 不要）
+### Display (Blob API — no CORS required)
 
-DB から取り出したバイトを Blob API で object URL に変換する。
-リモートへのリクエストが発生しないため **CORS 制約を受けない**。
+Bytes retrieved from the DB are converted to an object URL via the Blob API.
+No remote request is made, so **CORS restrictions do not apply**.
 
 ```typescript
 import { getAssetURL } from '@/domain/assets';
 
 const url = await getAssetURL(db, hash, 'image/png');
 imgElement.src = url ?? '';
-// 不要になったら解放: URL.revokeObjectURL(url)
+// Release when no longer needed: URL.revokeObjectURL(url)
 ```
 
-## 現在の実装: DuckDB-WASM
+## Current Implementation: DuckDB-WASM
 
-- ブラウザ内で SQL が使える（集計・JSON パスクエリ等）
-- BLOB は `registerFileBuffer` + `read_blob()` で挿入、Apache Arrow の
-  Binary カラム（`.getChild().get()`）で `Uint8Array` として読み出す
-- スキーマ変更は `ALTER TABLE` で段階的に行える
-- データ構造の試行錯誤に向いている
+- Full SQL available in the browser (aggregations, JSON path queries, etc.).
+- BLOBs are inserted via `registerFileBuffer` + `read_blob()` and read back
+  as `Uint8Array` through Apache Arrow's Binary column (`.getChild().get()`).
+- Schema changes can be applied incrementally with `ALTER TABLE`.
+- Well-suited for iterating on data structure.
 
-将来的に別のストレージに移行する場合は `src/domain/duckdb.ts` を差し替える。
+To migrate to a different storage backend in the future, replace `src/domain/duckdb.ts`.
+

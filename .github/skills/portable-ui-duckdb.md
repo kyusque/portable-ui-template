@@ -1,52 +1,60 @@
 # portable-ui-duckdb
 
-## このスキルの目的
+## Purpose
 
-DuckDB-WASM を「ブラウザで動くローカル DB」として扱い、GitHub Pages を含む静的配布でも再現可能に保つ。
-実装判断は「CDN 依存を減らし、配布物だけで起動できるか」を最優先にする。
+Use DuckDB-WASM as a local DB that runs in the browser, keeping it reproducible
+even in static deployments such as GitHub Pages.
+Implementation decisions prioritise "can the distribution artifact start on its
+own without CDN dependencies?"
 
-## 判断基準
+## Decision Criteria
 
-1. **配布物に必要な資産が含まれているか**
-   - `docs/` や `static_site/` だけを配れば起動できること
-   - `.wasm` と worker がビルド成果物へ一緒に出力されること
-2. **ブラウザ内で閉じるか**
-   - 初期化、CRUD、エクスポート、インポートがブラウザだけで完結すること
-   - 外部サービス停止やネットワーク制限で壊れないこと
-3. **配布形式ごとの差分が小さいか**
-   - `dist/`、`docs/`、`static_site/` で同じ DB 初期化コードを再利用できること
-   - 配布先ごとに実装を分岐させすぎないこと
+1. **Are all required assets included in the distribution?**
+   - `docs/` or `static_site/` alone must be sufficient to launch the app.
+   - `.wasm` files and workers must be emitted as part of the build output.
+2. **Does everything stay in the browser?**
+   - Initialisation, CRUD, export, and import must all work without any
+     external service or network access.
+3. **Is the delta between distribution formats small?**
+   - The same DB initialisation code must be reusable across `dist/`, `docs/`,
+     and `static_site/`.
+   - Avoid forking the implementation per distribution target.
 
-## 設計方針
+## Design Decisions
 
-### 1. DuckDB-WASM 資産はローカル配布を前提にする
+### 1. Ship DuckDB-WASM assets locally
 
-`getJsDelivrBundles()` のような CDN 前提ではなく、npm パッケージに含まれる `.wasm` と worker を Vite のアセットとして取り込む。
-これにより `pnpm build:pages` の出力だけで GitHub Pages 上の実行可否を判断できる。
+Instead of CDN bundles like `getJsDelivrBundles()`, Vite imports the `.wasm`
+files and workers directly from the npm package.  This means the output of
+`pnpm build:pages` alone is enough to verify whether the app runs on GitHub
+Pages.
 
-### 2. DB 本体はメモリ、永続化はブラウザストレージ
+### 2. DB in memory; persistence via browser storage
 
-- 実行時 DB: `:memory:`
-- セッション跨ぎの復元: `localStorage` キャッシュ
-- 外部共有: JSON エクスポート / インポート
+- Runtime DB: `:memory:`
+- Cross-session restore: `localStorage` cache
+- External sharing: JSON export / import
 
-この分離により、起動速度と移植性を保ちながら、サーバー依存なしで状態を持ち回せる。
+This separation preserves startup speed and portability while keeping state
+without any server dependency.
 
-### 3. データ設計は SQL で扱いやすい最小構成に寄せる
+### 3. Keep the data schema minimal and SQL-friendly
 
-- `items`: UI データ本体
-- `assets`: バイナリ資産
+- `items`: UI data
+- `assets`: binary content
 
-DuckDB を採用する理由は、単なる KVS ではなく「JSON とバイナリを同じ問い合わせ面で扱えること」にある。
+DuckDB is chosen because it can query both JSON and binary data through a
+single SQL surface — not merely as a KVS.
 
-## 評価ポイント
+## Verification Checklist
 
-- `pnpm build:pages` 後の `docs/` に DuckDB-WASM の `.wasm` / worker が出力されている
-- `pnpm preview` でページを開き、DB 初期化エラーなく UI が表示される
-- Export / Import / Clear Cache がブラウザ上で操作できる
+- After `pnpm build:pages`, DuckDB-WASM `.wasm` and worker files exist in `docs/`.
+- `pnpm preview` opens the page without DB initialisation errors.
+- Export / Import / Clear Cache all work in the browser.
 
-## 関連スキル
+## Related Skills
 
 - `portable-ui-architecture.md`
 - `portable-ui-data-model.md`
 - `portable-ui-distribution.md`
+

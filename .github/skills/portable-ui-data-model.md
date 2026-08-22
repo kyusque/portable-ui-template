@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS items (
 );
 ```
 
-タイムスタンプ等の付加情報が必要な場合は `data` JSON の中に入れる。
-スキーマは最小限に保ち、必要になったときだけ `ALTER TABLE` で拡張する。
+Additional metadata such as timestamps can be stored inside the `data` JSON.
+Keep the schema minimal and extend with `ALTER TABLE` only when necessary.
 
 ### Usage Patterns
 
@@ -43,10 +43,10 @@ CREATE TABLE IF NOT EXISTS assets (
 ### Usage
 
 - Store images, files, or any binary content.
-- Content は DuckDB の `BLOB` 型で保存。挿入は `registerFileBuffer` + `read_blob()`、読み出しは Apache Arrow の Binary カラム経由で `Uint8Array` を直接取得。
+- Content is stored as a DuckDB `BLOB`. Insert via `registerFileBuffer` + `read_blob()`; read back as `Uint8Array` through Apache Arrow's Binary column.
 - Reference from `items.data` as `{"imageHash": "<hash>"}`.
 - Hash is SHA-256 of raw content — identical content is stored once.
-- `getAssetURL()` で Blob API の object URL を生成 → CORS 不要でブラウザ内表示可能。
+- Use `getAssetURL()` to generate a Blob API object URL — no CORS required for in-browser display.
 
 ## Cross-Component References
 

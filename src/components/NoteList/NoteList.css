@@ -1,0 +1,43 @@
+.note-list {
+  margin-top: 1.5rem;
+}
+
+.note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 480px;
+  margin-bottom: 1rem;
+}
+
+.note-form textarea {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.95rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.notes {
+  list-style: none;
+  padding: 0;
+  max-width: 480px;
+}
+
+.notes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.notes li.pinned {
+  background: #fffbe6;
+}
+
+.notes li span {
+  flex: 1;
+  white-space: pre-wrap;
+}

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "streamlit-portable-ui-sample"
+version = "0.1.0"
+description = "Streamlit custom components for portable-ui-template"
+requires-python = ">=3.9"
+dependencies = ["streamlit>=1.30"]
+
+[tool.setuptools.packages.find]
+include = ["streamlit_portable_ui_sample*"]
+
+[tool.setuptools.package-data]
+streamlit_portable_ui_sample = ["frontend/**/*"]

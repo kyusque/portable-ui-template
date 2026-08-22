@@ -1,72 +1,98 @@
 # portable-ui-distribution
 
-## このスキルの目的
+## Purpose
 
-同じ UI とデータモデルを、利用者ごとの受け取り方に合わせて複数の出力先へ配布する。
-判断基準は「利用環境に合わせて最小の依存だけを渡せるか」であり、出力先を増やすこと自体が目的ではない。
+Deliver the same UI and data model to multiple output targets, each suited to
+the recipient's environment.
+The guiding criterion is "can we hand off only the minimum dependencies the
+consumer needs?" — adding more targets is never the goal in itself.
 
-## なぜ複数配置にするのか
+## Why Multiple Output Targets?
 
 ### `docs/`
 
-GitHub Pages ですぐ確認できる実行環境を持つため。
-レビュー、検証、デモでは「まずブラウザで触れること」が価値になる。
+Provides an immediately runnable environment via GitHub Pages.
+For review, validation, and demos, "being able to interact with it in a browser
+first" is the core value.
 
 ### `static_site/`
 
-リポジトリ外へ成果物だけを持ち出したいケースに備えるため。
-ZIP 配布や別サーバー配置など、GitHub Pages 前提ではない配布先に向く。
+Covers cases where only the build artifact needs to leave the repository.
+Suitable for ZIP distribution or hosting on a server that is not GitHub Pages.
 
 ### `dist/`
 
-テンプレートを部品として再利用するため。
-アプリ全体ではなくコンポーネント単位で組み込みたい利用者には、静的サイトよりライブラリ出力が適している。
+Enables the template to be reused as a component library.
+For consumers who want to embed individual components rather than an entire app,
+a library output is more appropriate than a static site.
 
-### `streamlit_sample/`
+### `streamlit_portable_ui_sample/`
 
-Python 側の統合イメージを早く評価するため。
-フロントエンド単独ではなく、他ランタイムとの接続点も最初から確認対象に含める。
+Allows early evaluation of the Python-side integration story.
+The connection point with other runtimes is included as a verification target
+from the start, not just the frontend in isolation.
 
-## 判断基準
+## Decision Criteria
 
-1. **利用者が受け取る単位が明確か**
-   - デモを見る人には `docs/`
-   - 配布物をそのまま置きたい人には `static_site/`
-   - 組み込みたい人には `dist/`
-2. **出力先ごとの差分が実装都合ではなく利用都合か**
-   - 同じ UI を別の目的で包み直しているだけであること
-   - 出力先ごとに別実装を増やさないこと
-3. **検証方法が出力先ごとに定義されているか**
-   - `docs/`: ブラウザで動作確認できる
-   - `dist/`: ライブラリとして参照できる
-   - `streamlit_sample/`: 統合サンプルとして読める
+1. **Is the unit each consumer receives clearly defined?**
+   - Demo viewers → `docs/`
+   - Consumers who want to deploy the artifact as-is → `static_site/`
+   - Consumers who want to embed components → `dist/`
+2. **Is the difference between targets driven by consumer needs, not
+   implementation convenience?**
+   - Each target is just the same UI repackaged for a different purpose.
+   - Separate implementations per target must not proliferate.
+3. **Is there a defined verification method for each target?**
+   - `docs/`: functional in the browser
+   - `dist/`: referenceable as a library
+   - `streamlit_portable_ui_sample/`: readable as an integration sample
 
-## 実装上の整理
+## Build Scripts
 
-- `pnpm build` → デフォルトの `dist/`
-- `pnpm build:pages` → `docs/`
-- `pnpm build:static` → `static_site/`
-- `pnpm build:streamlit` → `streamlit_sample/frontend/`
+| Command | Output | Purpose |
+|---------|--------|---------|
+| `pnpm build` | `dist/` | Default build |
+| `pnpm build:pages` | `docs/` | GitHub Pages |
+| `pnpm build:static` | `static_site/` | Standalone static site |
+| `pnpm build:streamlit` | `streamlit_portable_ui_sample/frontend/*/` | All Streamlit component builds |
+| `pnpm build:streamlit:sample_component` | `streamlit_portable_ui_sample/frontend/SampleComponent/` | SampleWidget only |
+| `pnpm build:streamlit:note_list` | `streamlit_portable_ui_sample/frontend/NoteList/` | NoteListWidget only |
 
-Vite の `build.outDir` を切り替えて、同じアプリ本体から出力先だけを変える。
-この構成により、配布戦略の差分をビルド設定へ閉じ込められる。
+Vite's `build.outDir` and `build.rollupOptions.input` are switched per
+`BUILD_TARGET` so that the same app source produces different outputs.
+This keeps the distribution strategy difference confined to build configuration.
 
-## Streamlit カスタムコンポーネントとしてのビルド
+## Streamlit Custom Component Package
 
-`streamlit_sample/frontend/` は Python パッケージが管理するディレクトリではなく、
-Vite でビルドした静的アセット（`index.html` + JS/CSS）を配置する場所。
+`streamlit_portable_ui_sample/frontend/<ComponentName>/` is **not** managed by
+Python. It is the location where Vite places static assets (each component's
+own `index.html` + JS/CSS).  One component = one subdirectory = one
+`declare_component` call.
 
 ```bash
-# ビルド
+# Build all Streamlit component frontends
 pnpm build:streamlit
-# → streamlit_sample/frontend/ に index.html + assets/ が生成される
+# → streamlit_portable_ui_sample/frontend/SampleComponent/index.html + assets/
+# → streamlit_portable_ui_sample/frontend/NoteList/index.html + assets/
 
-# Streamlit で確認
+# Run the sample app
 cd streamlit_sample
+pip install -e ..          # installs streamlit-portable-ui-sample
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-`streamlit_sample/__init__.py` が `components.declare_component("sample_component", path=...)` で
-`frontend/` を参照し、Streamlit が iframe 内でアセットを配信する。
-Python 側はビルド成果物の中身を解釈しない。
+Python usage:
+
+```python
+from streamlit_portable_ui_sample import SampleWidget, NoteListWidget
+
+result = SampleWidget(data={"title": "Hello", "count": 0}, key="s1")
+notes  = NoteListWidget(key="n1")
+```
+
+`streamlit_portable_ui_sample/__init__.py` exports one Python function per
+React component. Each function calls `declare_component` with the matching
+`frontend/<ComponentName>/` path.  Python never interprets the build artifacts
+— it only serves them via iframe.
+

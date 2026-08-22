@@ -13,10 +13,10 @@ pnpm dev
 
 | コマンド | 出力先 | 用途 |
 |---------|--------|------|
-| `pnpm build` | `dist/` | デフォルトビルド |
+| `pnpm build` | `dist/` | Default build |
 | `pnpm build:pages` | `docs/` | GitHub Pages |
-| `pnpm build:static` | `static_site/` | スタンドアロン静的サイト |
-| `pnpm build:streamlit` | `streamlit_sample/frontend/` | Streamlit カスタムコンポーネント |
+| `pnpm build:static` | `static_site/` | Standalone static site |
+| `pnpm build:streamlit` | `streamlit_portable_ui_sample/frontend/*/` | All Streamlit component builds |
 
 ## ディレクトリ構成
 

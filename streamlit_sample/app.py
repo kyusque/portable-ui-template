@@ -1,19 +1,32 @@
-"""Sample Streamlit app demonstrating streamlit_sample usage."""
+"""Sample Streamlit app demonstrating streamlit_portable_ui_sample usage."""
 import streamlit as st
-from streamlit_sample import sample_component
+from streamlit_portable_ui_sample import SampleWidget, NoteListWidget
 
 st.title("portable-ui-template — Streamlit Sample")
 
 st.write(
     """
-This page embeds the React `SampleComponent` as a Streamlit custom component.
-Data is exchanged via the component's props and return value.
+This page embeds React components from `streamlit_portable_ui_sample` as
+Streamlit custom components. Each widget maps 1:1 to a React component
+built from `src/components/`.
+
+Build the frontends first:
+
+```bash
+pnpm build:streamlit
+```
 """
 )
 
+st.subheader("SampleWidget")
 initial = {"title": "Hello from Streamlit", "count": 42}
-result = sample_component(data=initial, key="demo")
-
+result = SampleWidget(data=initial, key="sample")
 if result:
-    st.subheader("Component returned:")
+    st.subheader("SampleWidget returned:")
     st.json(result)
+
+st.subheader("NoteListWidget")
+note_result = NoteListWidget(initial_body="", key="notes")
+if note_result:
+    st.subheader("NoteListWidget returned:")
+    st.json(note_result)

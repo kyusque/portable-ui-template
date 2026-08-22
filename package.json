@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "build:pages": "tsc -b && BUILD_TARGET=pages vite build",
     "build:static": "tsc -b && BUILD_TARGET=static vite build",
-    "build:streamlit": "tsc -b && BUILD_TARGET=streamlit vite build",
+    "build:streamlit": "tsc -b && BUILD_TARGET=streamlit_sample_component vite build && BUILD_TARGET=streamlit_note_list vite build",
+    "build:streamlit:sample_component": "tsc -b && BUILD_TARGET=streamlit_sample_component vite build",
+    "build:streamlit:note_list": "tsc -b && BUILD_TARGET=streamlit_note_list vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
