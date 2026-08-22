@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { NoteData } from '../../domain/note';
-import { useItems } from '../../hooks/useItems';
+import { useRecords } from '../../hooks/useItems';
 import './NoteList.css';
 
 export interface NoteListProps {
@@ -8,18 +8,18 @@ export interface NoteListProps {
 }
 
 export function NoteList({ initialBody = '' }: NoteListProps) {
-  const { items, loading, upsert, remove } = useItems<NoteData>('Note');
+  const { records, loading, upsert, remove } = useRecords<NoteData>('Note');
   const [body, setBody] = useState(initialBody);
 
   const handleAdd = async () => {
     if (!body.trim()) return;
-    const sk = `note#${Date.now()}`;
-    await upsert(sk, { body, pinned: false });
+    const key = `note#${Date.now()}`;
+    await upsert(key, { body, pinned: false });
     setBody('');
   };
 
-  const togglePin = async (sk: string, current: NoteData) => {
-    await upsert(sk, { ...current, pinned: !current.pinned });
+  const togglePin = async (key: string, current: NoteData) => {
+    await upsert(key, { ...current, pinned: !current.pinned });
   };
 
   return (
@@ -39,13 +39,13 @@ export function NoteList({ initialBody = '' }: NoteListProps) {
       {loading && <p>Loading…</p>}
 
       <ul className="notes">
-        {items.map((item) => (
-          <li key={item.sk} className={item.data.pinned ? 'pinned' : ''}>
-            <span>{item.data.body}</span>
-            <button onClick={() => togglePin(item.sk, item.data)}>
-              {item.data.pinned ? '📌' : '📍'}
+        {records.map((record) => (
+          <li key={record.key} className={record.data.pinned ? 'pinned' : ''}>
+            <span>{record.data.body}</span>
+            <button onClick={() => togglePin(record.key.split(':').slice(1).join(':'), record.data)}>
+              {record.data.pinned ? '📌' : '📍'}
             </button>
-            <button onClick={() => remove(item.sk)}>✕</button>
+            <button onClick={() => remove(record.key.split(':').slice(1).join(':'))}>✕</button>
           </li>
         ))}
       </ul>

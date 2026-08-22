@@ -6,7 +6,6 @@ export interface SampleData extends Record<string, unknown> {
 }
 
 export interface SampleItem {
-  pk: 'Sample';
-  sk: string; // e.g. "sample#<id>"
+  key: string;
   data: SampleData;
 }

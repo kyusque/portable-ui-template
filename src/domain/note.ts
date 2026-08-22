@@ -5,7 +5,6 @@ export interface NoteData extends Record<string, unknown> {
 }
 
 export interface NoteItem {
-  pk: 'Note';
-  sk: string; // e.g. "note#<id>"
+  key: string;
   data: NoteData;
 }

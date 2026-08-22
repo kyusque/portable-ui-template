@@ -1,60 +1,29 @@
 # portable-ui-duckdb
 
-## Purpose
+## Role
 
-Use DuckDB-WASM as a local DB that runs in the browser, keeping it reproducible
-even in static deployments such as GitHub Pages.
-Implementation decisions prioritise "can the distribution artifact start on its
-own without CDN dependencies?"
+Use this skill when changing browser database initialization or its assets.
+DuckDB-WASM is selected for SQL over JSON and binary data, while the app
+remains usable as a static artifact with no backend.
 
-## Decision Criteria
+## Decisions
 
-1. **Are all required assets included in the distribution?**
-   - `docs/` or `static_site/` alone must be sufficient to launch the app.
-   - `.wasm` files and workers must be emitted as part of the build output.
-2. **Does everything stay in the browser?**
-   - Initialisation, CRUD, export, and import must all work without any
-     external service or network access.
-3. **Is the delta between distribution formats small?**
-   - The same DB initialisation code must be reusable across `dist/`, `docs/`,
-     and `static_site/`.
-   - Avoid forking the implementation per distribution target.
+- Import workers and WASM modules from `@duckdb/duckdb-wasm`; never rely on a
+  CDN for a distributable build.
+- Open an in-memory database, restore validated application data from browser
+  storage, and expose explicit JSON export/import for sharing.
+- Keep initialization in `src/domain/duckdb.ts`; targets must not fork it.
+- Treat a corrupt or incompatible cache as disposable, not as a startup crash.
 
-## Design Decisions
+## Evaluation
 
-### 1. Ship DuckDB-WASM assets locally
+A change is acceptable only if a freshly served artifact initializes without
+network services, performs CRUD and export/import in the browser, and includes
+all worker/WASM files it references. A failed cache restore must leave a usable
+empty database.
 
-Instead of CDN bundles like `getJsDelivrBundles()`, Vite imports the `.wasm`
-files and workers directly from the npm package.  This means the output of
-`pnpm build:pages` alone is enough to verify whether the app runs on GitHub
-Pages.
+## Verification
 
-### 2. DB in memory; persistence via browser storage
-
-- Runtime DB: `:memory:`
-- Cross-session restore: `localStorage` cache
-- External sharing: JSON export / import
-
-This separation preserves startup speed and portability while keeping state
-without any server dependency.
-
-### 3. Keep the data schema minimal and SQL-friendly
-
-- `items`: UI data
-- `assets`: binary content
-
-DuckDB is chosen because it can query both JSON and binary data through a
-single SQL surface — not merely as a KVS.
-
-## Verification Checklist
-
-- After `pnpm build:pages`, DuckDB-WASM `.wasm` and worker files exist in `docs/`.
-- `pnpm preview` opens the page without DB initialisation errors.
-- Export / Import / Clear Cache all work in the browser.
-
-## Related Skills
-
-- `portable-ui-architecture.md`
-- `portable-ui-data-model.md`
-- `portable-ui-distribution.md`
-
+Run `pnpm build:pages`, inspect `docs/assets/`, then serve `docs/` with a local
+static server and test the flows above in a browser. Repeat a production
+preview when the change affects the default build.

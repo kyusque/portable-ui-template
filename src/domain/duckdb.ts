@@ -31,27 +31,14 @@ export async function initDB(): Promise<duckdb.AsyncDuckDB> {
   const db = new duckdb.AsyncDuckDB(logger, worker);
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
 
-  // Restore from cache if available
-  const cached = loadCache();
-  if (cached) {
-    await db.open({
-      path: ':memory:',
-      accessMode: duckdb.DuckDBAccessMode.READ_WRITE,
-    });
-    const conn = await db.connect();
-    await conn.close();
-  } else {
-    await db.open({ path: ':memory:' });
-  }
+  await db.open({ path: ':memory:' });
 
   // Ensure schema exists
   const conn = await db.connect();
   await conn.query(`
-    CREATE TABLE IF NOT EXISTS items (
-      pk   TEXT NOT NULL,
-      sk   TEXT NOT NULL,
-      data JSON,
-      PRIMARY KEY (pk, sk)
+    CREATE TABLE IF NOT EXISTS records (
+      key  TEXT NOT NULL PRIMARY KEY,
+      data JSON
     );
   `);
   await conn.query(`
@@ -62,6 +49,15 @@ export async function initDB(): Promise<duckdb.AsyncDuckDB> {
     );
   `);
   await conn.close();
+
+  const cached = loadCache();
+  if (cached) {
+    try {
+      await importDB(db, Uint8Array.from(atob(cached), (char) => char.charCodeAt(0)).buffer);
+    } catch {
+      clearCache();
+    }
+  }
 
   _db = db;
   return db;
@@ -108,10 +104,10 @@ export async function exportDB(db: duckdb.AsyncDuckDB): Promise<ArrayBuffer> {
   const conn = await db.connect();
   // Export all tables to a temporary parquet in-memory; use JSON as portable format
   const result = await conn.query(`
-    SELECT 'items' AS tbl, pk, sk, data::TEXT AS data, NULL AS b64
-    FROM items
+    SELECT 'records' AS tbl, key, NULL AS size, data::TEXT AS data
+    FROM records
     UNION ALL
-    SELECT 'assets' AS tbl, hash AS pk, size::TEXT AS sk, encode(content, 'base64')::TEXT AS data, NULL AS b64
+    SELECT 'assets' AS tbl, hash AS key, size, encode(content, 'base64')::TEXT AS data
     FROM assets
   `);
   await conn.close();
@@ -130,21 +126,20 @@ export async function importDB(
 
   const conn = await db.connect();
   // Clear existing data before import
-  await conn.query('DELETE FROM items');
+  await conn.query('DELETE FROM records');
   await conn.query('DELETE FROM assets');
 
   for (const row of rows) {
-    if (row['tbl'] === 'items') {
-      const pk = (row['pk'] as string).replace(/'/g, "''");
-      const sk = (row['sk'] as string).replace(/'/g, "''");
+    if (row['tbl'] === 'records') {
+      const key = (row['key'] as string).replace(/'/g, "''");
       const data = (row['data'] as string).replace(/'/g, "''");
       await conn.query(`
-        INSERT OR REPLACE INTO items (pk, sk, data)
-        VALUES ('${pk}', '${sk}', '${data}')
+        INSERT OR REPLACE INTO records (key, data)
+        VALUES ('${key}', '${data}')
       `);
     } else if (row['tbl'] === 'assets') {
-      const hash = (row['pk'] as string).replace(/'/g, "''");
-      const size = Number(row['sk']);
+      const hash = (row['key'] as string).replace(/'/g, "''");
+      const size = Number(row['size']);
       const b64 = (row['data'] as string).replace(/'/g, "''");
       await conn.query(`
         INSERT OR REPLACE INTO assets (hash, content, size)

@@ -1,70 +1,39 @@
-# Data Model
+# portable-ui-data-model
 
-## Philosophy
+## Role
 
-Each UI component owns its data in an isolated single-table structure inspired by DynamoDB's single-table design pattern. This approach:
+Use this skill when adding persisted state or reviewing a schema. Choose the
+smallest generic contract that supports the access pattern; do not name a
+table after a current feature.
 
-- Keeps component data self-contained and portable.
-- Enables efficient access patterns without JOINs for single-component views.
-- Allows cross-component linkage via `pk`/`sk` references in `data`.
-
-## `items` Table
+## Contract
 
 ```sql
-CREATE TABLE IF NOT EXISTS items (
-  pk   TEXT NOT NULL,
-  sk   TEXT NOT NULL,
-  data JSON,
-  PRIMARY KEY (pk, sk)
+CREATE TABLE records (
+  key  TEXT NOT NULL PRIMARY KEY,
+  data JSON
 );
 ```
 
-Additional metadata such as timestamps can be stored inside the `data` JSON.
-Keep the schema minimal and extend with `ALTER TABLE` only when necessary.
+`key` is an opaque application key. A namespace may be encoded as
+`<namespace>:<identifier>`, but consumers must not depend on a partition-key /
+sort-key vocabulary. `data` is the feature payload and may evolve with
+backwards-compatible defaults.
 
-### Usage Patterns
+Binary data uses the separate content-addressed `assets` table. Its hash is
+only an implementation detail; JSON records store a reference to it.
 
-| Pattern | pk | sk | data |
-|---------|----|----|------|
-| Entity  | `"User"` | `"user#123"` | `{"name": "Alice", "email": "..."}` |
-| Setting | `"Config"` | `"theme"` | `{"mode": "dark"}` |
-| Relation| `"User#123"` | `"Post#456"` | `{"role": "author"}` |
+## Design process
 
-## `assets` Table
+1. List the reads and writes the UI actually needs.
+2. Choose a deterministic key and document its namespace.
+3. Keep feature-specific fields inside `data`.
+4. Define import/export compatibility before changing the shape.
+5. Prefer one query surface over feature-specific tables.
 
-```sql
-CREATE TABLE IF NOT EXISTS assets (
-  hash    TEXT    NOT NULL PRIMARY KEY,
-  content BLOB    NOT NULL,
-  size    INTEGER NOT NULL
-);
-```
+## Evaluation
 
-### Usage
-
-- Store images, files, or any binary content.
-- Content is stored as a DuckDB `BLOB`. Insert via `registerFileBuffer` + `read_blob()`; read back as `Uint8Array` through Apache Arrow's Binary column.
-- Reference from `items.data` as `{"imageHash": "<hash>"}`.
-- Hash is SHA-256 of raw content — identical content is stored once.
-- Use `getAssetURL()` to generate a Blob API object URL — no CORS required for in-browser display.
-
-## Cross-Component References
-
-To link data across components, store the foreign `pk`/`sk` in the `data` JSON:
-
-```json
-{
-  "user_pk": "User",
-  "user_sk": "user#123"
-}
-```
-
-Query example:
-```sql
-SELECT i2.*
-FROM items i1
-JOIN items i2
-  ON i2.pk = json_extract_string(i1.data, '$.user_pk')
- AND i2.sk = json_extract_string(i1.data, '$.user_sk')
-WHERE i1.pk = 'Post' AND i1.sk = 'post#456';
-```
+The design passes when two unrelated components can share the contract,
+records remain addressable after a reload, and a schema change does not require
+renaming storage tables. Reject designs that leak infrastructure terminology
+into domain types or require joins for a component's primary view.

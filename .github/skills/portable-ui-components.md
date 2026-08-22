@@ -1,63 +1,28 @@
-# Component Authoring Guidelines
+# portable-ui-components
 
-## File Structure
+## Role
 
-Each component lives in `src/components/<ComponentName>/`:
+Use this skill when creating or reviewing a component. A component owns its
+presentation and domain payload, but not the database implementation or host
+integration.
 
-```
-src/components/SampleComponent/
-  index.tsx         # Main React component
-  types.ts          # Props and domain types (re-exports from src/domain/)
-  hooks.ts          # Component-specific hooks (data fetching, mutations)
-  SampleComponent.css  # Scoped styles (optional)
-```
+## Decisions
 
-## Domain Types
+1. Put reusable UI in `src/components/<Name>/`.
+2. Put payload types in `src/domain/` and persist them through the generic
+   `records` contract.
+3. Use hooks for lifecycle and mutations; keep SQL out of render code.
+4. Expose a thin host binding only when a non-React consumer needs it.
 
-Domain types (data shapes used in `items.data`) live in `src/domain/<entity>.ts`:
+## Naming
 
-```typescript
-// src/domain/sample.ts
-export interface SampleItem {
-  pk: string;
-  sk: string;
-  data: SampleData;
-}
+Use `PascalCase` for components and payload types, `use<Name>` for hooks, and
+camelCase for functions. Name a feature by its capability (for example,
+`portable-ui-note-list`), not by storage mechanics.
 
-export interface SampleData {
-  title: string;
-  value: number;
-  // ...
-}
-```
+## Evaluation
 
-## Bindings
-
-A binding is a thin framework-agnostic wrapper over a component:
-
-```typescript
-// dist/components/SampleComponent/binding.ts
-export function mountSampleComponent(element: HTMLElement, props: SampleProps) {
-  // Use ReactDOM.render / createRoot to mount
-}
-export function unmountSampleComponent(element: HTMLElement) {
-  // Cleanup
-}
-```
-
-## Data Flow
-
-```
-DuckDB (items/assets)
-    ↓  useItems() hook
-React Component (render)
-    ↓  user interaction
-DuckDB mutation + cache persist
-```
-
-## Naming Conventions
-
-- Component: `PascalCase` (`SampleComponent`)
-- Hook: `use<Name>` (`useSampleItems`)
-- Domain type: `PascalCase` (`SampleData`)
-- DB query helpers: `camelCase` (`queryItems`, `upsertItem`)
+The component passes when it can render with a typed payload, survives reload,
+has no host-specific data logic, and can be built through the intended target.
+Review accessibility and empty/loading/error states before adding visual
+polish.

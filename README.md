@@ -1,6 +1,6 @@
 # portable-ui-template
 
-React + Vite テンプレート。スキル管理・複数配布形式・DuckDB-WASM によるブラウザ内データ管理を備えた UI コンポーネントの開発基盤。
+React + Vite テンプレート。設計判断を残すスキル、複数配布形式、DuckDB-WASM によるブラウザ内データ管理を備えた UI コンポーネントの開発基盤。
 
 ## Quick Start
 
@@ -36,13 +36,13 @@ src/
 
 詳細は `.github/skills/portable-ui-data-model.md` を参照。
 
-- **`items` テーブル**: DynamoDB 風単一テーブル設計（`pk` / `sk` / `data` JSON）
+- **`records` テーブル**: 汎用レコード設計（`key` / `data` JSON）。機能名はキーの namespace にだけ含める
 - **`assets` テーブル**: コンテンツアドレス型ストレージ（SHA-256 ハッシュキー）
 - **DuckDB-WASM**: ブラウザ内 SQL エンジン。キャッシュ・エクスポート・インポート対応
 
 ## スキル一覧 (.github/skills/)
 
-単なるテーマ一覧ではなく、「どう判断して、なぜその構成にするか」を残すためのスキル群。
+単なる名詞の一覧ではなく、設計・配置・評価・検証の判断基準を残すためのスキル群。
 
 | ファイル | 内容 |
 |---------|------|

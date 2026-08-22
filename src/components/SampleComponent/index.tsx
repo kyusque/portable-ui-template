@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { SampleData } from '../../domain/sample';
-import { useItems } from '../../hooks/useItems';
+import { useRecords } from '../../hooks/useItems';
 import './SampleComponent.css';
 
 export interface SampleComponentProps {
@@ -8,14 +8,14 @@ export interface SampleComponentProps {
 }
 
 export function SampleComponent({ initialData }: SampleComponentProps) {
-  const { items, loading, upsert, remove } = useItems<SampleData>('Sample');
+  const { records, loading, upsert, remove } = useRecords<SampleData>('Sample');
   const [title, setTitle] = useState(initialData?.title ?? '');
   const [count, setCount] = useState(initialData?.count ?? 0);
 
   const handleAdd = async () => {
     if (!title.trim()) return;
-    const sk = `sample#${Date.now()}`;
-    await upsert(sk, { title, count });
+    const key = `sample#${Date.now()}`;
+    await upsert(key, { title, count });
     setTitle('');
     setCount(0);
   };
@@ -43,19 +43,19 @@ export function SampleComponent({ initialData }: SampleComponentProps) {
       {loading && <p>Loading…</p>}
 
       <ul className="sample-list">
-        {items.map((item) => (
-          <li key={item.sk}>
-            <strong>{item.data.title}</strong> — {item.data.count}
-            {item.data.tags && (
+        {records.map((record) => (
+          <li key={record.key}>
+            <strong>{record.data.title}</strong> — {record.data.count}
+            {record.data.tags && (
               <span className="tags">
-                {item.data.tags.map((t) => (
+                {record.data.tags.map((t) => (
                   <span key={t} className="tag">
                     {t}
                   </span>
                 ))}
               </span>
             )}
-            <button onClick={() => remove(item.sk)}>✕</button>
+            <button onClick={() => remove(record.key.split(':').slice(1).join(':'))}>✕</button>
           </li>
         ))}
       </ul>

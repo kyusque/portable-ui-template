@@ -1,7 +1,6 @@
-// Core single-table item structure (DynamoDB-style)
-export interface Item<T = Record<string, unknown>> {
-  pk: string;
-  sk: string;
+// Generic record stored in the browser database.
+export interface RecordEntry<T = Record<string, unknown>> {
+  key: string;
   data: T;
 }
 
@@ -12,5 +11,5 @@ export interface Asset {
   size: number;
 }
 
-// Generic KVS entry stored in items.data
+// Generic JSON payload stored in records.data
 export type KVSData = Record<string, unknown>;
