@@ -46,6 +46,27 @@ Python 側の統合イメージを早く評価するため。
 - `pnpm build` → デフォルトの `dist/`
 - `pnpm build:pages` → `docs/`
 - `pnpm build:static` → `static_site/`
+- `pnpm build:streamlit` → `streamlit_sample/frontend/`
 
 Vite の `build.outDir` を切り替えて、同じアプリ本体から出力先だけを変える。
 この構成により、配布戦略の差分をビルド設定へ閉じ込められる。
+
+## Streamlit カスタムコンポーネントとしてのビルド
+
+`streamlit_sample/frontend/` は Python パッケージが管理するディレクトリではなく、
+Vite でビルドした静的アセット（`index.html` + JS/CSS）を配置する場所。
+
+```bash
+# ビルド
+pnpm build:streamlit
+# → streamlit_sample/frontend/ に index.html + assets/ が生成される
+
+# Streamlit で確認
+cd streamlit_sample
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+`streamlit_sample/__init__.py` が `components.declare_component("sample_component", path=...)` で
+`frontend/` を参照し、Streamlit が iframe 内でアセットを配信する。
+Python 側はビルド成果物の中身を解釈しない。

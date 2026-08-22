@@ -16,6 +16,7 @@ pnpm dev
 | `pnpm build` | `dist/` | デフォルトビルド |
 | `pnpm build:pages` | `docs/` | GitHub Pages |
 | `pnpm build:static` | `static_site/` | スタンドアロン静的サイト |
+| `pnpm build:streamlit` | `streamlit_sample/frontend/` | Streamlit カスタムコンポーネント |
 
 ## ディレクトリ構成
 

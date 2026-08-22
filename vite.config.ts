@@ -5,7 +5,9 @@ const outDir = process.env.BUILD_TARGET === 'pages'
   ? 'docs'
   : process.env.BUILD_TARGET === 'static'
     ? 'static_site'
-    : 'dist'
+    : process.env.BUILD_TARGET === 'streamlit'
+      ? 'streamlit_sample/frontend'
+      : 'dist'
 
 // https://vite.dev/config/
 export default defineConfig({
