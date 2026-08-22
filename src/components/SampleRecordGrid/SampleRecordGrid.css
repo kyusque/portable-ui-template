@@ -1,0 +1,60 @@
+.sample-record-grid {
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.sample-record-grid table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.sample-record-grid th,
+.sample-record-grid td {
+  border: 1px solid #cbd5e1;
+  padding: 0.35rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.sample-record-grid-toolbar {
+  background: #f1f5f9;
+}
+
+.sample-record-grid-toolbar th,
+.sample-record-grid-toolbar td {
+  text-align: right;
+}
+
+.sample-record-grid-toolbar button {
+  margin-left: 0.4rem;
+}
+
+.sample-record-grid input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 6rem;
+}
+
+.sample-record-grid-image img {
+  display: block;
+  max-width: 9rem;
+  max-height: 7rem;
+  margin-bottom: 0.35rem;
+}
+
+.sample-record-grid-image button,
+.sample-record-grid-attachments button {
+  display: block;
+  margin-top: 0.35rem;
+}
+
+.sample-record-grid-attachments ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+}
+
+.sample-record-grid-attachments li {
+  overflow-wrap: anywhere;
+}

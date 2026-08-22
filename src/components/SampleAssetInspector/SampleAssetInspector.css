@@ -1,0 +1,29 @@
+.sample-asset-inspector {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.sample-asset-inspector table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.sample-asset-inspector th,
+.sample-asset-inspector td {
+  border: 1px solid #ccc;
+  padding: 0.3rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.sample-asset-inspector th:first-child,
+.sample-asset-inspector td:first-child {
+  width: 75%;
+}
+
+.sample-asset-inspector code {
+  display: inline;
+  overflow-wrap: anywhere;
+}

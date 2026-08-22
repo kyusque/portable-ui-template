@@ -1,0 +1,2 @@
+This attachment was read from a server-side path by Python.
+The browser receives a bounded download URL and never sees the local path.

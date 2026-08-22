@@ -1,0 +1,29 @@
+.sample-table-inspector {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.sample-table-inspector table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.sample-table-inspector th,
+.sample-table-inspector td {
+  border: 1px solid #ccc;
+  padding: 0.3rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.sample-table-inspector th:first-child,
+.sample-table-inspector td:first-child {
+  width: 10rem;
+}
+
+.sample-table-inspector code {
+  display: inline;
+  overflow-wrap: anywhere;
+}

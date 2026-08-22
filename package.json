@@ -1,0 +1,34 @@
+{
+  "name": "portable-ui-template",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:pages": "tsc -b && vite build --mode pages",
+    "build:static": "tsc -b && vite build --mode static",
+    "build:streamlit": "tsc -b && vite build --mode streamlit_sample_record_grid && vite build --mode streamlit_sample_table_inspector",
+    "build:streamlit:sample-record-grid": "tsc -b && vite build --mode streamlit_sample_record_grid",
+    "build:streamlit:sample-table-inspector": "tsc -b && vite build --mode streamlit_sample_table_inspector",
+    "lint": "oxlint src",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@duckdb/duckdb-wasm": "1.32.0",
+    "apache-arrow": "^21.2.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "streamlit-component-lib": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "oxlint": "^1.75.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0"
+  },
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
+}

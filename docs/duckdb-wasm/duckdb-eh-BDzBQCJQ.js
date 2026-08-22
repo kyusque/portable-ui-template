@@ -1,0 +1,1 @@
+var e=``+new URL(`duckdb-eh-9ubY-jlA.wasm`,import.meta.url).href;export{e as default};

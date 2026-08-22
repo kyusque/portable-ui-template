@@ -1,0 +1,1 @@
+var e=``+new URL(`duckdb-browser-eh.worker-hQa-dcAV.js`,import.meta.url).href;export{e as default};
